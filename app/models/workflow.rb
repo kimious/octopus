@@ -25,32 +25,33 @@ class Workflow < ApplicationRecord
 
     workflow = create!(
       schema: {
-        node_1__0: {
+        channel_playlists__0: {
           initial_node: true,
           outputs: {
-            a: { node: "node_2__0", param: "x" },
-            b: { node: "node_2__0", param: "y" },
-            c: { node: "node_3__0", param: "x" }
+            playlist_ids: { node: "top_videos__0", param: "playlist_ids" }
           }
         },
-        node_2__0: {
+        top_videos__0: {
           outputs: {
-            a: { node: "node_4__0", param: "x" }
+            video_ids: { node: "transcripts__0", params: "video_ids" }
           }
         },
-        node_3__0: {
+        transcripts__0: {
           outputs: {
-            a: { node: "node_4__0", param: "y" }
-          }
-        },
-        node_4__0: {
-          outputs: {
-            final_result: {}
+            transcripts: {}
           }
         }
       }
     )
 
-    Engine.start(workflow, { x: 1 })
+    Engine.start(
+      workflow,
+      {
+        urls: [
+          "https://www.youtube.com/@GuillaumeMoubeche-FR",
+          "https://www.youtube.com/@patflynn"
+        ]
+      }
+    )
   end
 end
