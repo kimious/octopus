@@ -5,6 +5,10 @@ class WorkflowInstance < ApplicationRecord
 
   def current_nodes = state.keys
 
+  def filter_node_inputs(node_name, inputs)
+    inputs.slice(*schema[node_name]["inputs"])
+  end
+
   def output_results
     current_nodes.reduce({}) do |output_nodes, current_node|
       schema[current_node]["outputs"].each do |param, transition|
@@ -23,12 +27,12 @@ class WorkflowInstance < ApplicationRecord
 
   def workflow_completed? = output_results.keys.compact.size.zero?
 
-  def save_state!(node_name)
+  def save_state!(node_name, params)
     self.class.connection.execute(
       <<-SQL.squish)
         UPDATE workflow_instances SET
           state = state || '#{self.class.sanitize_sql({ node_name => state[node_name] }.to_json)}'::jsonb,
-          context = context || '#{self.class.sanitize_sql({ node_name => state[node_name] }.to_json)}'::jsonb
+          context = context || '#{self.class.sanitize_sql({ node_name => { inputs: params, outputs: state[node_name] } }.to_json)}'::jsonb
       SQL
   end
 

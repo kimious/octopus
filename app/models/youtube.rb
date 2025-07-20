@@ -57,7 +57,7 @@ class Youtube
 
     video_ids.each_slice(50).to_a.each do |ids|
       result = service.list_videos(
-        "statistics",
+        "contentDetails,statistics",
         id: ids.join(","),
         max_results: 50
       )
@@ -65,6 +65,16 @@ class Youtube
     end
 
     results
+  end
+
+  def transcript(video_id)
+    uri = URI("#{ENV.fetch('YOUTUBE_TRANSCRIPT_API_BASE_URL')}/transcripts/#{video_id}")
+    req = Net::HTTP::Get.new(uri)
+    # TODO: secure
+    req["Authorization"] = "Bearer #{}"
+    req["Content-Type"] = "application/json"
+    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    JSON.parse(res.body)
   end
 
   def service

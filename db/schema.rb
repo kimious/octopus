@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_03_092133) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_15_063651) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "blobs", force: :cascade do |t|
+    t.string "kind", null: false
+    t.jsonb "metadata", default: "{}", null: false
+    t.text "value", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind"], name: "index_blobs_on_kind"
+  end
 
   create_table "workflow_instances", force: :cascade do |t|
     t.bigint "workflow_id", null: false
@@ -20,6 +29,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_03_092133) do
     t.string "status", null: false
     t.jsonb "state", null: false
     t.jsonb "context", null: false
+    t.jsonb "args", default: "{}", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["status"], name: "index_workflow_instances_on_status"

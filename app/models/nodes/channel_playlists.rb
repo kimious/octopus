@@ -1,11 +1,13 @@
 module Nodes
   class ChannelPlaylists < Node
-    def batch(urls:)
+    node_inputs :urls
+
+    def perform_batch(workflow_instance_id:, urls:)
       b = Sidekiq::Batch.new
       b.on(:success, self.class, { bid: b.bid, callbacks: @callbacks })
       b.jobs do
         urls.each do |url|
-          self.class.perform_async("url" => url)
+          self.class.perform_async("workflow_instance_id" => workflow_instance_id, "url" => url)
         end
       end
     end

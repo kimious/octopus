@@ -1,7 +1,36 @@
 class Node
   include Sidekiq::Job
 
-  def batch? = respond_to?(:batch)
+  attr_accessor :workflow_instance
+
+  class << self
+    attr_reader :inputs
+
+    def node_inputs(*input_names)
+      @inputs = input_names
+    end
+  end
+
+  def read_input(path)
+    return nil unless path.include?(".")
+
+    segments = path.split(".")
+    case segments[0]
+    when "root"
+      workflow_instance.args.dig(*segments[1..-1])
+    else
+      workflow_instance.context.dig("#{segments[0]}", "inputs", *segments[1..-1])
+    end
+  end
+
+  def read_ouput(path)
+    return nil unless path.include?(".")
+
+    segments = path.split(".")
+    workflow_instance.context.dig("#{segments[0]}", "outputs", *segments[1..-1])
+  end
+
+  def batch? = respond_to?(:perform_batch)
 
   def batch_result(bid) = REDIS.lrange("#{bid}_result", 0, -1)
 
