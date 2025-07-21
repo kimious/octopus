@@ -1,7 +1,8 @@
 class Engine
-  def self.start(workflow, params)
-    instance = workflow.create_instance!(params)
-    EngineJob.perform_async(instance.id, workflow.initial_node, params.deep_stringify_keys)
+  def self.trigger(workflow, inputs)
+    instance = workflow.create_instance!(inputs)
+    inputs = instance.node_inputs(workflow.initial_node)
+    EngineJob.perform_async(instance.id, workflow.initial_node, inputs)
     instance
   end
 end

@@ -9,7 +9,7 @@ class Youtube
 
   def channel(url)
     handle = url.split("@").last
-    result = service.list_channels("id,contentDetails", for_handle: handle)
+    result = service.list_channels("id,snippet,contentDetails,statistics", for_handle: handle)
     result.items[0]
   end
 
@@ -57,7 +57,7 @@ class Youtube
 
     video_ids.each_slice(50).to_a.each do |ids|
       result = service.list_videos(
-        "contentDetails,statistics",
+        "snippet,contentDetails,statistics",
         id: ids.join(","),
         max_results: 50
       )
@@ -68,13 +68,15 @@ class Youtube
   end
 
   def transcript(video_id)
-    uri = URI("#{ENV.fetch('YOUTUBE_TRANSCRIPT_API_BASE_URL')}/transcripts/#{video_id}")
-    req = Net::HTTP::Get.new(uri)
-    # TODO: secure
-    req["Authorization"] = "Bearer #{}"
-    req["Content-Type"] = "application/json"
-    res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
-    JSON.parse(res.body)
+    { video_id:, transcript: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." }
+
+    # uri = URI("#{ENV.fetch('YOUTUBE_TRANSCRIPT_API_BASE_URL')}/transcripts/#{video_id}")
+    # req = Net::HTTP::Get.new(uri)
+    # # TODO: secure
+    # req["Authorization"] = "Bearer #{}"
+    # req["Content-Type"] = "application/json"
+    # res = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(req) }
+    # JSON.parse(res.body)
   end
 
   def service

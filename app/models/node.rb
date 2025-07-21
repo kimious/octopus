@@ -1,41 +1,73 @@
 class Node
   include Sidekiq::Job
 
+  class MultipleBatchInput < StandardError; end
+
   attr_accessor :workflow_instance
 
   class << self
     attr_reader :inputs
+    attr_reader :outputs
 
-    def node_inputs(*input_names)
-      @inputs = input_names
+    def def_input(input, options = {})
+      (@inputs ||= {})[input] = options
+      if options[:batch_as]
+        raise MultipleBatchInput if method_defined?(:perform_batch)
+
+        def_batch(input, options[:batch_as])
+      end
+    end
+
+    def def_output(output, options = {})
+      (@outputs ||= {})[output] = options
+    end
+
+    def def_batch(input, batch_input)
+      define_method(:perform_batch) do |params|
+        input = params[input.to_s]
+        input = input.respond_to?(:each) ? input : [ input ]
+
+        batch = Sidekiq::Batch.new
+        batch.on(:success, self.class, { bid: batch.bid, callbacks: @callbacks })
+        batch.jobs do
+          input.each do |item|
+            self.class.perform_async(item, *input_values(params))
+          end
+        end
+      end
+
+      define_method(:on_success) do |status, options|
+        @callbacks = options["callbacks"].deep_symbolize_keys
+        notify!(:success, batch_result(options["bid"]))
+      end
     end
   end
 
-  def read_input(path)
-    return nil unless path.include?(".")
-
-    segments = path.split(".")
-    case segments[0]
-    when "root"
-      workflow_instance.args.dig(*segments[1..-1])
-    else
-      workflow_instance.context.dig("#{segments[0]}", "inputs", *segments[1..-1])
-    end
-  end
-
-  def read_ouput(path)
-    return nil unless path.include?(".")
-
-    segments = path.split(".")
-    workflow_instance.context.dig("#{segments[0]}", "outputs", *segments[1..-1])
+  def input_values(inputs)
+    self.class.inputs.keys
+      .select { |input| !self.class.inputs[input][:batch_as] }
+      .map { |input| inputs[input.to_s] }
   end
 
   def batch? = respond_to?(:perform_batch)
 
-  def batch_result(bid) = REDIS.lrange("#{bid}_result", 0, -1)
+  def batch_result(bid)
+    self.class.outputs.keys.reduce({}) do |result, output|
+      result[output] = REDIS.lrange("#{bid}_#{output}_result", 0, -1)
+      result[output] = result[output].map { |item| JSON.parse(item) }
+      result
+    end
+  end
 
-  def save_batch_result!(result)
-    REDIS.lpush("#{bid}_result", result)
+  def save_batch_result!(outputs)
+    REDIS.multi do |transaction|
+      outputs.each do |output, result|
+        transaction.lpush(
+          "#{bid}_#{output}_result",
+          result.is_a?(Array) ? result.map { |r| JSON.dump(r) } : JSON.dump(result)
+        )
+      end
+    end
   end
 
   def on(status, listener, params = {})

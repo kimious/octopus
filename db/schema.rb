@@ -27,9 +27,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_15_063651) do
     t.bigint "workflow_id", null: false
     t.jsonb "schema", null: false
     t.string "status", null: false
-    t.jsonb "state", null: false
     t.jsonb "context", null: false
-    t.jsonb "args", default: "{}", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["status"], name: "index_workflow_instances_on_status"
