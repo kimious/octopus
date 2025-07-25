@@ -8,11 +8,11 @@ class WorkflowInstance < ApplicationRecord
   def node_inputs(node_name)
     inputs = {}
     schema[node_name]["inputs"].each do |name, config|
-      case config["type"]
+      case config["source"]
       in "static"
         inputs[name] = config["value"]
       in "context"
-        inputs[name] = context.dig(*config["value"].split("."))
+        inputs[name] = context.dig(*config["path"].split("."))
       end
     end
     inputs
