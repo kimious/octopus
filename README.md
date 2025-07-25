@@ -48,21 +48,21 @@ builder = WorkflowBuilder.new
 builder.parse_json!(json)
 
 if builder.errors?
-  # builder.errors return the raw error logs
-  # builder.error_messages return human readable error messages
+  # builder.errors returns the raw error logs
+  # builder.error_messages returns human-readable error messages
   puts builder.error_messages
 else
-  # builder.schema return the parsed workflow schema
-  # and can be used to create a new workflow in the database
+  # builder.schema returns the parsed workflow schema
+  # that can be used to create a new workflow in the database
   workflow = Workflow.create!(schema: builder.schema)
 end
 ```
 
 ### Parsing errors
 Each entry in `builder.errors` contains the following attributes:
-- `code`: the error code (see the Codes section for an exhaustive list of error codes)
+- `code`: the error code (see the [Codes](#codes) section below for an exhaustive list of error codes)
 - `key`: the key in the json where the error was detected
-- `value`: the value of the key (`nil` is the key was missing)
+- `value`: the value of the key (`nil` if the key was missing)
 - `message`: a human-readable version of the error
 
 #### Codes
@@ -148,3 +148,4 @@ Given the following schema:
 | `nonexistent_source_node_output` | `nodes.top_videos#4.inputs.foo.path` | `channel_info#0.fail` | output 'fail' does not exist in node 'ChannelInfo' |
 | `nonexistent_trigger_param` | `nodes.top_videos#5.inputs.foo.path` | `trigger.fail` | trigger parameter 'fail' does not exist |
 | `self_referencing_node` | `nodes.top_videos#6.inputs.foo.path` | `top_videos#6` | path 'top_videos#6.foo' in 'nodes.top_videos#6.inputs.foo.path' cannot reference node 'top_videos#6' (self-referencing is not allowed) |
+****
