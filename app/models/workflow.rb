@@ -23,14 +23,19 @@ class Workflow < ApplicationRecord
     json = <<-JSON.squish
       {
         "trigger": {
-          "params": [ "urls", "video_prompt" ]
+          "params": [ "http_test_url", "urls", "video_prompt" ]
         },
         "nodes": {
-          "channel_info#0": {
+          "http_request#0": {
             "initial_node": true,
             "inputs": {
+              "url": { "source": "context", "path": "trigger.http_test_url" }
+            }
+          },
+          "channel_info#0": {
+            "inputs": {
               "urls": { "source": "context", "path": "trigger.urls" },
-              "min_subscribers": { "source": "static", "value": 5000 }
+              "min_subscribers": { "source": "context", "path": "http_request#0.response.body.min_subscribers" }
             }
           },
           "top_videos#0": {
@@ -68,6 +73,7 @@ class Workflow < ApplicationRecord
       Engine.trigger(
         workflow,
         {
+          http_test_url: "http://localhost:3000/test_api",
           video_prompt: "a video in French on how to go from 0 to $1M in a startup",
           urls: [
             "https://www.youtube.com/@GuillaumeMoubeche-FR",

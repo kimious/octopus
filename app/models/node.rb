@@ -22,6 +22,8 @@ class Node
       (@outputs ||= {})[output] = options
     end
 
+    def valid_output?(output) = outputs.key?(output)
+
     def def_batch(input, batch_input)
       define_method(:perform_batch) do |params|
         input = params[input.to_s]
@@ -41,6 +43,10 @@ class Node
         notify!(:success, batch_result(options["bid"]))
       end
     end
+
+    def node_for(node_name) = Nodes.const_get(node_name.split("#")[0].camelize)
+
+    def node_name = name.demodulize.underscore
   end
 
   def input_values(inputs)

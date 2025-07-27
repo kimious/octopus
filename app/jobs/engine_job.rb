@@ -3,7 +3,7 @@ class EngineJob
 
   def perform(workflow_instance_id, node_name, params)
     instance = WorkflowInstance.find(workflow_instance_id)
-    node_class = Nodes.const_get(node_name.split("#")[0].camelize)
+    node_class = Node.node_for(node_name)
     node = node_class.new
 
     if node.batch?

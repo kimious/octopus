@@ -11,6 +11,8 @@ class WorkflowBuilder
     @warnings = []
   end
 
+  # TODO:
+  # - detect missing required inputs for each node
   def parse_json!(json)
     json = JSON.parse(json)
     nodes = {}
@@ -170,17 +172,17 @@ class WorkflowBuilder
     attr_reader :node_name, :node_ref, :node_class, :schema
     def initialize(node_ref, schema)
       @node_ref = node_ref
-      @node_name = node_ref.split("#")[0].camelize
-      @node_class = Nodes.const_get(node_name)
+      @node_class = Node.node_for(node_ref)
+      @node_name = @node_class.node_name
       @schema = schema
     end
 
-    def valid_output?(output_name) = node_class.outputs.key?(output_name.to_sym)
+    def valid_output?(output_name) = node_class.valid_output?(output_name.to_sym)
 
     def add
       schema[node_ref] = {
-        inputs: Hash[node_class.inputs.keys.map { |i| [ i, { type: nil, value: nil } ] }],
-        outputs: node_class.outputs.keys,
+        inputs: Hash[node_class.inputs.keys.map { |i| [ i.to_s, { source: nil } ] }],
+        outputs: node_class.outputs.keys.map(&:to_s),
         next: []
       }
       self
@@ -192,15 +194,15 @@ class WorkflowBuilder
     end
 
     def connect_input(input_name, output)
-      schema[node_ref][:inputs][input_name.to_sym][:source] = "context"
-      schema[node_ref][:inputs][input_name.to_sym][:path] = output[:name]
+      schema[node_ref][:inputs][input_name][:source] = "context"
+      schema[node_ref][:inputs][input_name][:path] = output[:name]
       output[:node].add_next(self) unless output[:node] == "trigger"
       self
     end
 
     def static_input(input_name, value)
-      schema[node_ref][:inputs][input_name.to_sym][:source] = "static"
-      schema[node_ref][:inputs][input_name.to_sym][:value] = value
+      schema[node_ref][:inputs][input_name][:source] = "static"
+      schema[node_ref][:inputs][input_name][:value] = value
       self
     end
 

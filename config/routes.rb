@@ -12,4 +12,6 @@ Rails.application.routes.draw do
   #
   #
   mount Sidekiq::Web => "/sidekiq"
+
+  get "/test_api", to: "test#api"
 end

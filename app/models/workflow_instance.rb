@@ -13,6 +13,8 @@ class WorkflowInstance < ApplicationRecord
         inputs[name] = config["value"]
       in "context"
         inputs[name] = context.dig(*config["path"].split("."))
+      in nil
+        inputs[name] = Node.node_for(node_name).inputs[name.to_sym][:default]
       end
     end
     inputs
