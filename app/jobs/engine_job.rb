@@ -1,8 +1,24 @@
 class EngineJob
   include Sidekiq::Job
 
+  sidekiq_options retry: 0
+  sidekiq_options backtrace: true
+
+  sidekiq_retries_exhausted do |job, error|
+    instance = WorkflowInstance.find(job["args"].first)
+    instance.log_failure!(
+      error: error.class.name,
+      message: error.message,
+      node_name: job["args"][1],
+      params: job["args"][2],
+      location: error.backtrace.first
+    )
+  end
+
   def perform(workflow_instance_id, node_name, params)
     instance = WorkflowInstance.find(workflow_instance_id)
+    instance.update!(status: "running", failures: [])
+
     node_class = Node.node_for(node_name)
     node = node_class.new
 
@@ -31,6 +47,12 @@ class EngineJob
     instance.reload
 
     next_nodes = instance.schema[node_name]["next"]
+
+    if next_nodes.empty?
+      instance.completed!
+      return
+    end
+
     next_nodes.each do |next_node|
       deps = instance.schema.keys.select { |dep_node| instance.schema[dep_node]["next"].include?(next_node) }
       deps_ready = deps.all? do |dep|

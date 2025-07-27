@@ -1,7 +1,7 @@
 class WorkflowInstance < ApplicationRecord
   belongs_to :workflow
 
-  enum :status, { idle: "idle", running: "running", failed: "failed", stopped: "stopped" }
+  enum :status, { idle: "idle", running: "running", failed: "failed", completed: "completed" }
 
   def current_nodes = state.keys
 
@@ -20,11 +20,22 @@ class WorkflowInstance < ApplicationRecord
     inputs
   end
 
+  def log_failure!(failure)
+    self.class.connection.execute(
+      <<-SQL.squish)
+        UPDATE workflow_instances
+        SET status = 'failed',
+            failures = failures || #{self.class.connection.quote(self.class.sanitize_sql([ failure ].to_json))}::jsonb
+        WHERE id = #{id}
+      SQL
+  end
+
   def save_context!(node_name, inputs, outputs)
     self.class.connection.execute(
       <<-SQL.squish)
-        UPDATE workflow_instances SET
-          context = context || #{self.class.connection.quote(self.class.sanitize_sql({ node_name => { inputs:, outputs: } }.to_json))}::jsonb
+        UPDATE workflow_instances
+        SET context = context || #{self.class.connection.quote(self.class.sanitize_sql({ node_name => { inputs:, outputs: } }.to_json))}::jsonb
+        WHERE id = #{id}
       SQL
   end
 end

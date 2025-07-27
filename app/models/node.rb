@@ -1,6 +1,25 @@
 class Node
   include Sidekiq::Job
 
+  sidekiq_options retry: 0
+  sidekiq_options backtrace: true
+
+  sidekiq_retries_exhausted do |job, error|
+    callbacks = REDIS.smembers("BID-#{job["bid"]}-callbacks-success")
+    callback = JSON.parse(callbacks[0])
+    workflow_instance_id = callback.dig("opts", "callbacks", "success", "params", "workflow_instance_id")
+    node_name = callback.dig("opts", "callbacks", "success", "params", "node_name")
+
+    instance = WorkflowInstance.find(workflow_instance_id)
+    instance.log_failure!(
+      error: error.class.name,
+      message: error.message,
+      node_name:,
+      params: job["args"],
+      location: error.backtrace.first
+    )
+  end
+
   class MultipleBatchInput < StandardError; end
 
   attr_accessor :workflow_instance

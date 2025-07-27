@@ -5,6 +5,7 @@ class CreateWorkflowInstances < ActiveRecord::Migration[8.0]
       t.jsonb :schema, null: false
       t.string :status, null: false, index: true
       t.jsonb :context, null: false
+      t.jsonb :failures, null: false, default: []
       t.timestamps
     end
   end
