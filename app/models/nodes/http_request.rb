@@ -1,12 +1,12 @@
 module Nodes
   class HttpRequest < Node
-    def_input :url
-    def_input :method, default: "GET", enum: %w[GET POST PUT PATCH DELETE]
-    def_input :query_params, default: {}
-    def_input :body, default: {}
-    def_input :headers, default: {}
+    has_input :url
+    has_input :method, default: "GET", enum: %w[GET POST PUT PATCH DELETE]
+    has_input :query_params, default: {}
+    has_input :body, default: {}
+    has_input :headers, default: {}
 
-    def_output :response
+    has_output :response
 
     def self.valid_output?(output) = output.start_with?("response")
 

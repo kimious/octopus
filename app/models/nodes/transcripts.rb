@@ -1,7 +1,7 @@
 module Nodes
   class Transcripts < Node
-    def_input :videos, batch_as: :video
-    def_output :transcript_ids
+    has_input :videos, batch_as: :video
+    has_output :transcript_ids
 
     def perform(video)
       res = Youtube.new.transcript(video["id"])

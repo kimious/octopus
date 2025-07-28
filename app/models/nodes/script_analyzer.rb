@@ -1,7 +1,7 @@
 module Nodes
   class ScriptAnalyzer < Node
-    def_input :transcript_ids, batch_as: :transcript_id
-    def_output :analysis_ids
+    has_input :transcript_ids, batch_as: :transcript_id
+    has_output :analysis_ids
 
     def perform(transcript_id)
       blob = Blob.find(transcript_id)

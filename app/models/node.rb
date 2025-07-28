@@ -35,7 +35,7 @@ class Node
 
     def credentials = (@credentials ||= [])
 
-    def def_input(input, options = {})
+    def has_input(input, options = {})
       inputs[input] = options
       if options[:batch_as]
         raise MultipleBatchInput if method_defined?(:perform_batch)
@@ -44,7 +44,7 @@ class Node
       end
     end
 
-    def def_output(output, options = {})
+    def has_output(output, options = {})
       outputs[output] = options
     end
 

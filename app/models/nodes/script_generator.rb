@@ -1,8 +1,8 @@
 module Nodes
   class ScriptGenerator < Node
-    def_input :analysis_ids
-    def_input :video_prompt
-    def_output :script_id
+    has_input :analysis_ids
+    has_input :video_prompt
+    has_output :script_id
 
     def perform(analysis_ids, video_prompt)
       analysis_list = Blob.find(analysis_ids)

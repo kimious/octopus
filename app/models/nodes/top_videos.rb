@@ -1,7 +1,7 @@
 module Nodes
   class TopVideos < Node
-    def_input :channels, batch_as: :channel
-    def_output :videos
+    has_input :channels, batch_as: :channel
+    has_output :videos
 
     def perform(channel)
       yt_api = Youtube.new

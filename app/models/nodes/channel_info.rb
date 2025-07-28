@@ -1,8 +1,8 @@
 module Nodes
   class ChannelInfo < Node
-    def_input :urls, batch_as: :url
-    def_input :min_subscribers
-    def_output :channels
+    has_input :urls, batch_as: :url
+    has_input :min_subscribers
+    has_output :channels
     requires_credential :youtube_api_key
 
     def perform(url, min_subscribers)
