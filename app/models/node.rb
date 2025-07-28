@@ -27,9 +27,16 @@ class Node
   class << self
     attr_reader :inputs
     attr_reader :outputs
+    attr_reader :credentials
+
+    def inputs = (@inputs ||= {})
+
+    def outputs = (@outputs ||= {})
+
+    def credentials = (@credentials ||= [])
 
     def def_input(input, options = {})
-      (@inputs ||= {})[input] = options
+      inputs[input] = options
       if options[:batch_as]
         raise MultipleBatchInput if method_defined?(:perform_batch)
 
@@ -38,7 +45,7 @@ class Node
     end
 
     def def_output(output, options = {})
-      (@outputs ||= {})[output] = options
+      outputs[output] = options
     end
 
     def valid_output?(output) = outputs.key?(output)
@@ -61,6 +68,10 @@ class Node
         @callbacks = options["callbacks"].deep_symbolize_keys
         notify!(:success, batch_result(options["bid"]))
       end
+    end
+
+    def requires_credential(credential)
+      credentials << credential
     end
 
     def node_for(node_name) = Nodes.const_get(node_name.split("#")[0].camelize)

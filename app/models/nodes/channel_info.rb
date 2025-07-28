@@ -3,6 +3,7 @@ module Nodes
     def_input :urls, batch_as: :url
     def_input :min_subscribers
     def_output :channels
+    requires_credential :youtube_api_key
 
     def perform(url, min_subscribers)
       channel = Youtube.new.channel(url)

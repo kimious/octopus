@@ -181,6 +181,7 @@ class WorkflowBuilder
 
     def add
       schema[node_ref] = {
+        credentials: Hash[node_class.credentials.map { |i| [ i.to_s, nil ] }],
         inputs: Hash[node_class.inputs.keys.map { |i| [ i.to_s, { source: nil } ] }],
         outputs: node_class.outputs.keys.map(&:to_s),
         next: []
