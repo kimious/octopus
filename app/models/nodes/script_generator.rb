@@ -3,11 +3,13 @@ module Nodes
     has_input :analysis_ids
     has_input :video_prompt
     has_output :script_id
+    requires_credential :openai_api_key
 
     def perform(analysis_ids, video_prompt)
+      openai_credential = credential("openai_api_key")
       analysis_list = Blob.find(analysis_ids)
 
-      generated_script = Gpt.new.chat_completion(
+      generated_script = Gpt.new(openai_credential.data["api_key"]).chat_completion(
         "
         You are an expert YouTube scriptwriter.
         Write a title and script for #{video_prompt} using the analysis below:

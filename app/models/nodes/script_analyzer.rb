@@ -2,11 +2,13 @@ module Nodes
   class ScriptAnalyzer < Node
     has_input :transcript_ids, batch_as: :transcript_id
     has_output :analysis_ids
+    requires_credential :openai_api_key
 
     def perform(transcript_id)
+      openai_credential = credential("openai_api_key")
       blob = Blob.find(transcript_id)
 
-      analysis = Gpt.new.chat_completion(
+      analysis = Gpt.new(openai_credential.data["api_key"]).chat_completion(
         "
         You are an expert YouTube scriptwriter.
         You will be given a script of a video (within triple double quotes) that performed really well on YouTube.

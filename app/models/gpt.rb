@@ -1,4 +1,8 @@
 class Gpt
+  def initialize(api_key)
+    @api_key = api_key
+  end
+
   def chat_completion(system_prompt, user_prompt)
     messages = [
       { role: "system", content: system_prompt },
@@ -12,6 +16,6 @@ class Gpt
   end
 
   def client
-    @client ||= OpenAI::Client.new(api_key: ENV.fetch("OPENAI_API_KEY"))
+    @client ||= OpenAI::Client.new(api_key: @api_key)
   end
 end

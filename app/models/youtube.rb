@@ -3,8 +3,8 @@ class Youtube
 
   class StopBrowsing < StandardError; end
 
-  def initialize
-    @api_key = ENV.fetch("YOUTUBE_API_KEY")
+  def initialize(api_key)
+    @api_key = api_key
   end
 
   def channel(url)

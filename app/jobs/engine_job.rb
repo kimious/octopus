@@ -27,6 +27,7 @@ class EngineJob
       node.perform_batch(params)
     else
       node.workflow_instance = instance
+      node.node_name = node_name
       result = node.perform(*node.input_values(params))
       handle_result!(instance, node_name, params, result)
     end

@@ -2,9 +2,11 @@ module Nodes
   class TopVideos < Node
     has_input :channels, batch_as: :channel
     has_output :videos
+    requires_credential :youtube_api_key
 
     def perform(channel)
-      yt_api = Youtube.new
+      youtube_credential = credential("youtube_api_key")
+      yt_api = Youtube.new(youtube_credential.data["api_key"])
       video_ids = []
 
       yt_api.browse_videos(channel["playlist_id"]) do |videos|

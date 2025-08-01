@@ -4,7 +4,7 @@ module Nodes
     has_output :transcript_ids
 
     def perform(video)
-      res = Youtube.new.transcript(video["id"])
+      res = Youtube.new(nil).transcript(video["id"])
       blob = Blob.create!(
         kind: "yt_transcript",
         metadata: { video_id: video["id"] },

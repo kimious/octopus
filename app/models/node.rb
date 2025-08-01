@@ -22,7 +22,7 @@ class Node
 
   class MultipleBatchInput < StandardError; end
 
-  attr_accessor :workflow_instance
+  attr_writer :workflow_instance, :node_name
 
   class << self
     attr_reader :inputs
@@ -79,6 +79,24 @@ class Node
     def node_name = name.demodulize.underscore
   end
 
+  def workflow_instance
+    return @workflow_instance if @workflow_instance
+
+    @callbacks ||= REDIS.smembers("BID-#{bid}-callbacks-success")
+    callback = JSON.parse(@callbacks[0])
+    workflow_instance_id = callback.dig("opts", "callbacks", "success", "params", "workflow_instance_id")
+
+    @workflow_instance = WorkflowInstance.find(workflow_instance_id)
+  end
+
+  def node_name
+    return @node_name if @node_name
+
+    @callbacks ||= REDIS.smembers("BID-#{bid}-callbacks-success")
+    callback = JSON.parse(@callbacks[0])
+    @node_name = callback.dig("opts", "callbacks", "success", "params", "node_name")
+  end
+
   def input_values(inputs)
     self.class.inputs.keys
       .select { |input| !self.class.inputs[input][:batch_as] }
@@ -114,5 +132,13 @@ class Node
   def notify!(status, result)
     callback = @callbacks[status]
     callback[:listener].constantize.send("on_#{status}", callback[:params].merge(result:))
+  end
+
+  def credential(kind)
+    @credentials ||= {}
+
+    return @credentials[kind] if @credentials.key?(kind)
+
+    @credentials[kind] = Credential.find(workflow_instance.schema[node_name]["credentials"][kind])
   end
 end

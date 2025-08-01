@@ -6,7 +6,9 @@ module Nodes
     requires_credential :youtube_api_key
 
     def perform(url, min_subscribers)
-      channel = Youtube.new.channel(url)
+      youtube_credential = credential("youtube_api_key")
+      channel = Youtube.new(youtube_credential.data["api_key"]).channel(url)
+
       if channel.statistics.subscriber_count > min_subscribers
           save_batch_result!(
             channels: {
