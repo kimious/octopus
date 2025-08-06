@@ -6,13 +6,21 @@ class Workflow < ApplicationRecord
       schema:,
       status: "idle",
       context: {
-        trigger: inputs
+        params: inputs
       }
     )
   end
 
   def initial_node
     @initial_node ||= schema.select { |node, definition| definition["initial_node"] }.keys.first
+  end
+
+  def required_params
+    schema.values.flat_map do |node|
+      node["inputs"].values.map do |input|
+        input["source"] == "context" && input["path"].starts_with?("params") ? input["path"].split(".").last : nil
+      end
+    end.compact
   end
 
   def required_credentials
@@ -46,19 +54,17 @@ class Workflow < ApplicationRecord
 
     json = <<-JSON.squish
       {
-        "trigger": {
-          "params": [ "http_test_url", "urls", "video_prompt" ]
-        },
+        "params": [ "http_test_url", "urls", "video_prompt" ],
         "nodes": {
           "http_request#0": {
             "initial_node": true,
             "inputs": {
-              "url": { "source": "context", "path": "trigger.http_test_url" }
+              "url": { "source": "context", "path": "params.http_test_url" }
             }
           },
           "channel_info#0": {
             "inputs": {
-              "urls": { "source": "context", "path": "trigger.urls" },
+              "urls": { "source": "context", "path": "params.urls" },
               "min_subscribers": { "source": "context", "path": "http_request#0.response.body.min_subscribers" }
             }
           },
@@ -80,7 +86,7 @@ class Workflow < ApplicationRecord
           "script_generator#0": {
             "inputs": {
               "analysis_ids": { "source": "context", "path": "script_analyzer#0.analysis_ids" },
-              "video_prompt": { "source": "context", "path": "trigger.video_prompt" }
+              "video_prompt": { "source": "context", "path": "params.video_prompt" }
             }
           }
         }

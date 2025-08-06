@@ -3,7 +3,7 @@ class WorkflowBuilder
   attr_reader :errors, :warnings
 
   REF_REGEXP = /\A\w+#\d+\z/
-  NODE_OUTPUT_REGEXP = /\A((\w+#\d+)|trigger)(\.\w+)+\z/
+  NODE_OUTPUT_REGEXP = /\A((\w+#\d+)|params)(\.\w+)+\z/
 
   def initialize
     @schema = {}
@@ -14,12 +14,18 @@ class WorkflowBuilder
   # TODO:
   # - detect missing required inputs for each node
   def parse_json!(json)
-    json = JSON.parse(json)
+    json = JSON.parse(json) rescue nil
+
+    if json.nil?
+      error(code: :invalid_json, key: nil, message: "cannot parse json (malformatted)")
+      return
+    end
+
     nodes = {}
     errors.clear
     warnings.clear
 
-    trigger = set_trigger(json.dig("trigger", "params") || [])
+    params = set_params(json["params"] || [])
     json_nodes = json["nodes"] || {}
 
     json_nodes.each do |node_ref, node_config|
@@ -59,7 +65,7 @@ class WorkflowBuilder
               code: :invalid_input_source_path,
               key: "nodes.#{node_ref}.inputs.#{input}.path",
               value: input_config["path"],
-              message: "value '#{input_config["path"]}' of property 'nodes.#{node_ref}.inputs.#{input}.path' is not a valid input path (valid input path must match regexp /\A((\w+#\d+)|trigger)(\.\w+)+\z/)"
+              message: "value '#{input_config["path"]}' of property 'nodes.#{node_ref}.inputs.#{input}.path' is not a valid input path (valid input path must match regexp /\A((\w+#\d+)|params)(\.\w+)+\z/)"
             )
             next
           end
@@ -78,17 +84,17 @@ class WorkflowBuilder
             next
           end
 
-          if source_node_ref == "trigger"
-            if !trigger.valid_param?(source_node_output)
+          if source_node_ref == "params"
+            if !params.valid_param?(source_node_output)
               error(
-                code: :nonexistent_trigger_param,
+                code: :nonexistent_workflow_parameter,
                 key: "nodes.#{node_ref}.inputs.#{input}.path",
                 value: input_config["path"],
-                message: "trigger parameter '#{source_node_output}' does not exist"
+                message: "workflow parameter '#{source_node_output}' does not exist"
               )
               next
             end
-            node.connect_input(input, trigger.param(source_node_output))
+            node.connect_input(input, params.param(source_node_output))
           else
             if !nodes[source_node_ref]
               error(
@@ -132,6 +138,8 @@ class WorkflowBuilder
         end
       end
     end
+
+    schema
   end
 
   def errors? = errors.any?
@@ -152,20 +160,20 @@ class WorkflowBuilder
     errors << { code:, key:, value:, message: }.compact
   end
 
-  def set_trigger(*params) = Trigger.new(*params)
+  def set_params(*params) = Params.new(*params)
 
   def add_node(node_name) = NodeBuilder.new(node_name, schema).add
 
-  class Trigger
-    attr_reader :params
+  class Params
+    attr_reader :names
 
-    def initialize(params)
-      @params = params
+    def initialize(names)
+      @names = names
     end
 
-    def param(param_name) = { node: "trigger", name: "trigger.#{param_name}" }
+    def param(param_name) = { node: "params", name: "params.#{param_name}" }
 
-    def valid_param?(param_name) = params.include?(param_name)
+    def valid_param?(param_name) = names.include?(param_name)
   end
 
   class NodeBuilder
@@ -197,7 +205,7 @@ class WorkflowBuilder
     def connect_input(input_name, output)
       schema[node_ref][:inputs][input_name][:source] = "context"
       schema[node_ref][:inputs][input_name][:path] = output[:name]
-      output[:node].add_next(self) unless output[:node] == "trigger"
+      output[:node].add_next(self) unless output[:node] == "params"
       self
     end
 

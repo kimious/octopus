@@ -1,4 +1,14 @@
 class Engine
+  class MissingParameters < StandardError
+    attr_reader :workflow_id, :missing_parameters
+
+    def initialize(message, workflow_id, missing_parameters)
+      super(message)
+      @workflow_id = workflow_id
+      @missing_parameters = missing_parameters
+    end
+  end
+
   class MissingCredentials < StandardError
     attr_reader :workflow_id, :missing_credentials
 
@@ -17,7 +27,16 @@ class Engine
         workflow.missing_credentials
       )
     end
-    # TODO: fail if missing trigger inputs
+
+    missing_params = (workflow.required_params - inputs.keys.map(&:to_s))
+    if missing_params.any?
+      raise MissingParameters.new(
+        "workflow id=#{workflow.id} is missing parameters #{missing_params.to_sentence}",
+        workflow.id,
+        missing_params
+      )
+    end
+
     instance = workflow.create_instance!(inputs)
     inputs = instance.node_inputs(workflow.initial_node)
     EngineJob.perform_async(instance.id, workflow.initial_node, inputs)
