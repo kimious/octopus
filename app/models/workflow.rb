@@ -56,16 +56,10 @@ class Workflow < ApplicationRecord
       {
         "params": [ "http_test_url", "urls", "video_prompt" ],
         "nodes": {
-          "http_request#0": {
+          "channel_info#0": {
             "initial_node": true,
             "inputs": {
-              "url": { "source": "context", "path": "params.http_test_url" }
-            }
-          },
-          "channel_info#0": {
-            "inputs": {
-              "urls": { "source": "context", "path": "params.urls" },
-              "min_subscribers": { "source": "context", "path": "http_request#0.response.body.min_subscribers" }
+              "urls": { "source": "context", "path": "params.urls" }
             }
           },
           "top_videos#0": {

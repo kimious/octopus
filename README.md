@@ -54,6 +54,7 @@ Each entry in `builder.errors` contains the following attributes:
 | `invalid_node_ref` | When a node reference does not match the format `<node_name>#<integer>` |
 | `missing_input_source_path` | When a `path` is missing for an input with a `source` set to `context` |
 | `missing_source_value` | When a `value` is missing for an input with a source set to `static` |
+| `nonexistent_node_input` | When a input does not exist in a node |
 | `nonexistent_source_node` | When a node referenced in an input does not exist |
 | `nonexistent_source_node_output` | When an node output referenced in an input does not exist |
 | `nonexistent_workflow_parameter` | When a workflow parameter referenced in an input does not exist |
@@ -77,44 +78,49 @@ Given the following schema:
     },
     "top_videos#0": {
       "inputs": {
-        "foo": { "source": "context" }
+        "channels": { "source": "context" }
       }
     },
     "top_videos#1": {
       "inputs": {
-        "foo": { "source": "static" }
+        "channels": { "source": "static" }
       }
     },
     "top_videos#2": {
       "inputs": {
-        "foo": { "source": "context", "path": "fail" }
+        "channels": { "source": "context", "path": "fail" }
       }
     },
     "top_videos#3": {
       "inputs": {
-        "foo": { "source": "context", "path": "unknown#0.fail" }
+        "channels": { "source": "context", "path": "unknown#0.fail" }
       }
     },
     "top_videos#4": {
       "inputs": {
-        "foo": { "source": "context", "path": "channel_info#0.fail" }
+        "channels": { "source": "context", "path": "channel_info#0.fail" }
       }
     },
     "top_videos#5": {
       "inputs": {
-        "foo": { "source": "context", "path": "params.fail" }
+        "channels": { "source": "context", "path": "params.fail" }
       }
     },
     "top_videos#6": {
       "inputs": {
-        "foo": { "source": "context", "path": "top_videos#6.foo" }
+        "channels": { "source": "context", "path": "top_videos#6.channels" }
       }
     },
     "top_videos#7": {
       "inputs": {
-        "foo": { "source": "fail", "path": "channel_info#0.channels" }
+        "channels": { "source": "fail", "path": "channel_info#0.channels" }
       }
-    }
+    },
+    "top_videos#8": {
+      "inputs": {
+        "foo": { "source": "static", "value": "bar" }
+      }
+    },
   }
 }
 ```
@@ -122,11 +128,12 @@ Given the following schema:
 | Code | Key | Value | Message |
 | - | - | - | - |
 | `invalid_node_ref` | `nodes.fail#fail` | | node 'fail#fail' in object 'nodes' is not a valid node reference (valid node references must match regexp /Aw+#d+z/) |
-| `missing_input_source_path` | `nodes.top_videos#0.inputs.foo` | | property 'path' is missing in object 'nodes.top_videos#0.inputs.foo' (context source inputs must define a path) |
-| `missing_source_value` | `nodes.top_videos#1.inputs.foo` | | property 'value' is missing in object 'nodes.top_videos#1.inputs.foo' (static source inputs must define a value) |
-| `invalid_input_source_path` | `nodes.top_videos#2.inputs.foo.path` | `fail` | value 'fail' of property 'nodes.top_videos#2.inputs.foo.path' is not a valid input path (valid input path must match regexp /A((w+#d+)|params)(.w+)+z/) |
-| `nonexistent_source_node` | `nodes.top_videos#3.inputs.foo.path` | `unknown#0` | node reference 'unknown#0' does not exist in object 'nodes' |
-| `nonexistent_source_node_output` | `nodes.top_videos#4.inputs.foo.path` | `channel_info#0.fail` | output 'fail' does not exist in node 'ChannelInfo' |
-| `nonexistent_workflow_param` | `nodes.top_videos#5.inputs.foo.path` | `workflow.fail` | workflow parameter 'fail' does not exist |
-| `self_referencing_node` | `nodes.top_videos#6.inputs.foo.path` | `top_videos#6` | path 'top_videos#6.foo' in 'nodes.top_videos#6.inputs.foo.path' cannot reference node 'top_videos#6' (self-referencing is not allowed) |
+| `missing_input_source_path` | `nodes.top_videos#0.inputs.channels` | | property 'path' is missing in object 'nodes.top_videos#0.inputs.channels' (context source inputs must define a path) |
+| `missing_source_value` | `nodes.top_videos#1.inputs.channels` | | property 'value' is missing in object 'nodes.top_videos#1.inputs.channels' (static source inputs must define a value) |
+| `invalid_input_source_path` | `nodes.top_videos#2.inputs.channels.path` | `fail` | value 'fail' of property 'nodes.top_videos#2.inputs.channels.path' is not a valid input path (valid input path must match regexp /A((w+#d+)|params)(.w+)+z/) |
+| `nonexistent_source_node` | `nodes.top_videos#3.inputs.channels.path` | `unknown#0` | node reference 'unknown#0' does not exist in object 'nodes' |
+| `nonexistent_source_node_output` | `nodes.top_videos#4.inputs.channels.path` | `channel_info#0.fail` | output 'fail' does not exist in node 'ChannelInfo' |
+| `nonexistent_workflow_param` | `nodes.top_videos#5.inputs.channels.path` | `workflow.fail` | workflow parameter 'fail' does not exist |
+| `self_referencing_node` | `nodes.top_videos#6.inputs.channels.path` | `top_videos#6` | path 'top_videos#6.channels' in 'nodes.top_videos#6.inputs.channels.path' cannot reference node 'top_videos#6' (self-referencing is not allowed) |
+| `nonexistent_node_input` | `nodes.top_videos#8.inputs.foo` | `foo` | input 'gfoo' does not exist in node 'top_videos#8' |
 ****

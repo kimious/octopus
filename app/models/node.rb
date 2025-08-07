@@ -53,6 +53,8 @@ class Node
       outputs[output] = options
     end
 
+    def valid_input?(input) = inputs.key?(input)
+
     def valid_output?(output) = outputs.key?(output)
 
     def def_batch(input, batch_input)

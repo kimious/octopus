@@ -96,6 +96,16 @@ class WorkflowBuilder
             end
             node.connect_input(input, params.param(source_node_output))
           else
+            if !node.valid_input?(input)
+              error(
+                code: :nonexistent_node_input,
+                key: "nodes.#{node_ref}.inputs.#{input}",
+                value: input,
+                message: "input '#{input}' does not exist in node '#{node_ref}'"
+              )
+              next
+            end
+
             if !nodes[source_node_ref]
               error(
                 code: :nonexistent_source_node,
@@ -184,6 +194,8 @@ class WorkflowBuilder
       @node_name = @node_class.node_name
       @schema = schema
     end
+
+    def valid_input?(input_name) = node_class.valid_input?(input_name.to_sym)
 
     def valid_output?(output_name) = node_class.valid_output?(output_name.to_sym)
 
