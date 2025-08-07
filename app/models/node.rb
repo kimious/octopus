@@ -25,6 +25,7 @@ class Node
   attr_writer :workflow_instance, :node_name
 
   class << self
+    attr_accessor :description
     attr_reader :inputs
     attr_reader :outputs
     attr_reader :credentials

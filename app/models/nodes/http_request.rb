@@ -1,6 +1,6 @@
 module Nodes
   class HttpRequest < Node
-    has_input :url
+    has_input :url, description: "URL where to send the HTTP request"
     has_input :method, default: "GET", enum: %w[GET POST PUT PATCH DELETE]
     has_input :query_params, default: {}
     has_input :body, default: {}

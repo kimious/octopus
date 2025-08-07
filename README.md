@@ -8,34 +8,19 @@ Check `Workflow::demo`
 ```ruby
 json = <<-JSON.squish
   {
-    "params": [ "urls", "video_prompt" ],
-    "nodes": {
-      "channel_info#0": {
-        "initial_node": true,
+    "params": ["test_api_url"],
+    "nodes":{
+      "http_request#0":{
+        "initial_node":true,
         "inputs": {
-          "urls": { "source": "context", "path": "params.urls" },
-          "min_subscribers": { "source": "static", "value": 5000 }
+          "url":{ "source":"context","path":"params.test_api_url"}
         }
       },
-      "top_videos#0": {
-        "inputs": {
-          "channels": { "source": "context", "path": "channel_info#0.channels" }
-        }
-      },
-      "transcripts#0": {
-        "inputs": {
-          "videos": { "source": "context", "path": "top_videos#0.videos" }
-        }
-      },
-      "script_analyzer#0": {
-        "inputs": {
-          "transcript_ids": { "source": "context", "path": "transcripts#0.transcript_ids" }
-        }
-      },
-      "script_generator#0": {
-        "inputs": {
-          "analysis_ids": { "source": "context", "path": "script_analyzer#0.analysis_ids" },
-          "video_prompt": { "source": "context", "path": "params.video_prompt" }
+      "hello_world#0":{
+        "inputs":{
+          "input_field": {
+            "source":"context","path":"http_request#0.response"
+          }
         }
       }
     }
