@@ -1,7 +1,11 @@
 module Nodes
   class Transcripts < Node
-    has_input :videos, batch_as: :video
-    has_output :transcript_ids
+    describe "A node to retrieve transcripts for multiple YouTube videos"
+    has_input :videos,
+      batch_as: :video,
+      description: "The list of videos including the id for each"
+    has_output :transcript_ids,
+      description: "The list of transcript IDs for each video"
 
     def perform(video)
       res = Youtube.new(nil).transcript(video["id"])

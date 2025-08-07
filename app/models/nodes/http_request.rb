@@ -1,12 +1,13 @@
 module Nodes
   class HttpRequest < Node
+    describe "A node to make an HTTP request"
     has_input :url, description: "URL where to send the HTTP request"
-    has_input :method, default: "GET", enum: %w[GET POST PUT PATCH DELETE]
-    has_input :query_params, default: {}
-    has_input :body, default: {}
-    has_input :headers, default: {}
+    has_input :method, default: "GET", enum: %w[GET POST PUT PATCH DELETE], description: "HTTP method to use in the HTTP request"
+    has_input :query_params, default: {}, description: "Query parameters to use in the HTTP request"
+    has_input :body, default: {}, description: "Body of the HTTP request"
+    has_input :headers, default: {}, description: "Headers of the HTTP request"
 
-    has_output :response
+    has_output :response, description: "Response of the HTTP request"
 
     def self.valid_output?(output) = output.start_with?("response")
 

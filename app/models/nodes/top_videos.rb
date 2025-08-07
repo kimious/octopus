@@ -1,7 +1,11 @@
 module Nodes
   class TopVideos < Node
-    has_input :channels, batch_as: :channel
-    has_output :videos
+    describe "A node to retrieve the 5 most viewed videos in the last 3 months for multiple YouTube channels"
+    has_input :channels,
+      batch_as: :channel,
+      description: "The list of YouTube channels to fetch videos from"
+    has_output :videos,
+      description: "The list of videos including id, title, published_at and view_count for each"
     requires_credential :youtube_api_key
 
     def perform(channel)
@@ -25,7 +29,7 @@ module Nodes
       end
       video_stats.sort! { |v1, v2| v2.statistics.view_count <=> v1.statistics.view_count }
       videos =
-        video_stats.take(1).map do |v|
+        video_stats.take(5).map do |v|
           {
             id: v.id,
             title: v.snippet.title,
