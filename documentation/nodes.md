@@ -3,10 +3,12 @@
 * Inputs:
   - `videos`:
     * Description: The list of videos including the id for each
+    * Type: Array<{ id: String, title: String, published_at: DateTime, view_count: Integer }>
     * Required: true
 * Outputs:
   - `transcript_ids`:
     * Description: The list of transcript IDs for each video
+    * Type: Array<Integer>
 
 --
 
@@ -15,10 +17,12 @@
 * Inputs:
   - `channels`:
     * Description: The list of YouTube channels to fetch videos from
+    * Type: Array<{ title: String, subscriber_count: Integer, playlist_id: String }>
     * Required: true
 * Outputs:
   - `videos`:
-    * Description: The list of videos including id, title, published_at and view_count for each
+    * Description: The list of videos
+    * Type: Array<{ id: String, title: String, published_at: DateTime, view_count: Integer }>
 
 --
 
@@ -27,13 +31,16 @@
 * Inputs:
   - `analysis_ids`:
     * Description: The list of analysis IDs to use as strategic principles
+    * Type: Array<Integer>
     * Required: true
   - `video_prompt`:
     * Description: The prompt that describes the video to make
+    * Type: String
     * Required: true
 * Outputs:
   - `script_id`:
     * Description: ID of the newly generated script
+    * Type: Integer
 
 --
 
@@ -42,10 +49,12 @@
 * Inputs:
   - `transcript_ids`:
     * Description: The list of transcript IDs to analyze
+    * Type: Array<Integer>
     * Required: true
 * Outputs:
   - `analysis_ids`:
     * Description: The list of IDs of generated analysis for each transcript
+    * Type: Array<Integer>
 
 --
 
@@ -54,26 +63,32 @@
 * Inputs:
   - `url`:
     * Description: URL where to send the HTTP request
+    * Type: String
     * Required: true
   - `method`:
     * Description: HTTP method to use in the HTTP request
+    * Type: Enum { GET, POST, PUT, PATCH, DELETE }
     * Required: false
     * Default: GET
   - `query_params`:
     * Description: Query parameters to use in the HTTP request
+    * Type: Hash
     * Required: false
     * Default: {}
   - `body`:
     * Description: Body of the HTTP request
+    * Type: Hash
     * Required: false
     * Default: {}
   - `headers`:
     * Description: Headers of the HTTP request
+    * Type: Hash
     * Required: false
     * Default: {}
 * Outputs:
   - `response`:
     * Description: Response of the HTTP request
+    * Type: Hash
 
 --
 
@@ -82,10 +97,12 @@
 * Inputs:
   - `name`:
     * Description: Person name to say hello to
+    * Type: String
     * Required: true
 * Outputs:
   - `greetings`:
     * Description: The greeting message
+    * Type: String
 
 --
 
@@ -94,7 +111,9 @@
 * Inputs:
   - `urls`:
     * Description: The list of YouTube channel URLs
+    * Type: Array<String>
     * Required: true
 * Outputs:
   - `channels`:
-    * Description: The list of Youtube channels including title, subscriber_count and playlist_id for each
+    * Description: The list of Youtube channels
+    * Type: Array<{ title: String, subscriber_count: Integer, playlist_id: String }>

@@ -2,10 +2,13 @@ module Nodes
   class ScriptGenerator < Node
     describe "A node to generate a YouTube video script based on the analysis of other video scripts"
     has_input :analysis_ids,
+      type: Array[Integer],
       description: "The list of analysis IDs to use as strategic principles"
     has_input :video_prompt,
+      type: String,
       description: "The prompt that describes the video to make"
     has_output :script_id,
+      type: Integer,
       description: "ID of the newly generated script"
     requires_credential :openai_api_key
 

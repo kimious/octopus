@@ -2,10 +2,12 @@ module Nodes
   class TopVideos < Node
     describe "A node to retrieve the 5 most viewed videos in the last 3 months for multiple YouTube channels"
     has_input :channels,
+      type: Array[{ title: String, subscriber_count: Integer, playlist_id: String }],
       batch_as: :channel,
       description: "The list of YouTube channels to fetch videos from"
     has_output :videos,
-      description: "The list of videos including id, title, published_at and view_count for each"
+      type: Array[{ id: String, title: String, published_at: DateTime, view_count: Integer }],
+      description: "The list of videos"
     requires_credential :youtube_api_key
 
     def perform(channel)

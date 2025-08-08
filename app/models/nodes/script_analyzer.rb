@@ -1,11 +1,12 @@
 module Nodes
   class ScriptAnalyzer < Node
     describe "A node to analyze the structure and strategy of a YouTube script"
-
     has_input :transcript_ids,
+      type: Array[Integer],
       batch_as: :transcript_id,
       description: "The list of transcript IDs to analyze"
     has_output :analysis_ids,
+      type: Array[Integer],
       description: "The list of IDs of generated analysis for each transcript"
     requires_credential :openai_api_key
 

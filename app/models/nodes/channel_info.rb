@@ -2,10 +2,12 @@ module Nodes
   class ChannelInfo < Node
     describe "A node to fetch information about YouTube channels"
     has_input :urls,
+      type: Array[String],
       batch_as: :url,
       description: "The list of YouTube channel URLs"
     has_output :channels,
-      description: "The list of Youtube channels including title, subscriber_count and playlist_id for each"
+      type: Array[{ title: String, subscriber_count: Integer, playlist_id: String }],
+      description: "The list of Youtube channels"
 
     requires_credential :youtube_api_key
 
