@@ -1,3 +1,7 @@
+# Pause semantics: subclasses can opt into engine-level pausing by
+# overriding `Node.pauses? = true` (e.g. `Nodes::ApprovalGate`). The engine
+# then halts downstream enqueue and flips `WorkflowInstance#status` to
+# `waiting_approval`.
 class Node
   include Sidekiq::Job
 
@@ -35,6 +39,9 @@ class Node
     def outputs = (@outputs ||= {})
 
     def credentials = (@credentials ||= [])
+
+    # Subclasses override to opt-in to engine-level pausing (see ApprovalGate).
+    def pauses? = false
 
     def describe(description)
       @description = description

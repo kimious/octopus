@@ -44,8 +44,22 @@ class EngineJob
   end
 
   def handle_result!(instance, node_name, params, result)
-    instance.save_context!(node_name, params, result)
+    node_class = Node.node_for(node_name)
+    outputs = if node_class.pauses?
+      # Pause nodes are pass-throughs. Stage all wired inputs as outputs
+      # so downstream wiring resolves immediately on approval.
+      params.deep_stringify_keys.merge(result.deep_stringify_keys)
+    else
+      result
+    end
+
+    instance.save_context!(node_name, params, outputs)
     instance.reload
+
+    if node_class.pauses?
+      instance.update!(status: "waiting_approval")
+      return
+    end
 
     next_nodes = instance.schema[node_name]["next"]
 
