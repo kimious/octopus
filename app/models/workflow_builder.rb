@@ -45,6 +45,8 @@ class WorkflowBuilder
     json_nodes.each do |node_ref, node_config|
       node = nodes[node_ref]
       node.set_initial(true) if node_config["initial_node"]
+      node.set_config(node_config["config"]) if node_config["config"]
+      node.set_explicit_next(node_config["next"]) if node_config["next"].is_a?(Array)
 
       next unless node_config["inputs"]
 
@@ -204,6 +206,7 @@ class WorkflowBuilder
         credentials: Hash[node_class.credentials.map { |i| [ i.to_s, nil ] }],
         inputs: Hash[node_class.inputs.keys.map { |i| [ i.to_s, { source: nil } ] }],
         outputs: node_class.outputs.keys.map(&:to_s),
+        config: {},
         next: []
       }
       self
@@ -214,23 +217,49 @@ class WorkflowBuilder
       self
     end
 
+    def set_config(config)
+      schema[node_ref][:config] = (schema[node_ref][:config] || {}).merge(config.to_h.transform_keys(&:to_s))
+      self
+    end
+
+    # Explicit `next` overrides the auto-derived dependency chain. Used by
+    # nodes whose downstream connection is not implied by input wiring (e.g. the
+    # ApprovalGate, where downstream nodes pull data from the upstream producer
+    # and not from the gate itself).
+    def set_explicit_next(refs)
+      schema[node_ref][:next] = refs.map(&:to_s)
+      self
+    end
+
     def connect_input(input_name, output)
+      schema[node_ref][:inputs][input_name] ||= { source: nil }
       schema[node_ref][:inputs][input_name][:source] = "context"
       schema[node_ref][:inputs][input_name][:path] = output[:name]
+      register_passthrough_output(input_name) if node_class.pauses?
       output[:node].add_next(self) unless output[:node] == "params"
       self
     end
 
     def static_input(input_name, value)
+      schema[node_ref][:inputs][input_name] ||= { source: nil }
       schema[node_ref][:inputs][input_name][:source] = "static"
       schema[node_ref][:inputs][input_name][:value] = value
+      register_passthrough_output(input_name) if node_class.pauses?
       self
+    end
+
+    # Pause-style nodes (e.g. ApprovalGate) are transparent: any wired
+    # input is also published as an output of the same name, so downstream
+    # nodes can wire from the gate (making the gate their dependency in
+    # `deps_ready` checks) instead of from the original producer.
+    def register_passthrough_output(input_name)
+      schema[node_ref][:outputs] << input_name.to_s unless schema[node_ref][:outputs].include?(input_name.to_s)
     end
 
     def output(name) = { node: self, name: "#{node_ref}.outputs.#{name}" }
 
     def add_next(node)
-      schema[node_ref][:next] << node.node_ref
+      schema[node_ref][:next] << node.node_ref unless schema[node_ref][:next].include?(node.node_ref)
       self
     end
   end

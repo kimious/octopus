@@ -42,4 +42,23 @@ class Engine
     EngineJob.perform_async(instance.id, workflow.initial_node, inputs)
     instance
   end
+
+  # Resumes a paused workflow by enqueuing nodes downstream of `node_ref`.
+  # Mirrors the downstream-enqueue logic in `EngineJob#handle_result!`.
+  def self.continue_after(instance, node_ref)
+    next_nodes = instance.schema[node_ref]["next"] || []
+    return if next_nodes.empty?
+
+    next_nodes.each do |next_node|
+      deps = instance.schema.keys.select { |dep_node| (instance.schema[dep_node]["next"] || []).include?(next_node) }
+      deps_ready = deps.all? do |dep|
+        instance.context.dig(dep, "outputs")&.keys&.sort == instance.schema[dep]["outputs"].sort
+      end
+
+      if deps_ready
+        inputs = instance.node_inputs(next_node)
+        EngineJob.perform_async(instance.id, next_node, inputs)
+      end
+    end
+  end
 end
